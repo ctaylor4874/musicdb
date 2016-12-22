@@ -2,7 +2,6 @@
 .dropbox
 .dropbox.attr
 .dropbox.cache
-.idea/*
 out
 gen### SublimeText template
 *.tmlanguage.cache
@@ -94,3 +93,6 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+.idea/
+dbconfig.py
