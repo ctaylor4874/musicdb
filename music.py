@@ -12,12 +12,11 @@ dbHost = dbconfig.dbHost
 dbName = dbconfig.dbName
 
 
-# I am using this API:
+#API:
 # http://www.theaudiodb.com/forum/viewtopic.php?t=7
 
 def getAlbums(artistName):
     url = "http://www.theaudiodb.com/api/v1/json/1/searchalbum.php?s=%s" % urllib.quote_plus(artistName)
-    print url
     response = StringIO.StringIO()
     c = pycurl.Curl()
     c.setopt(c.URL, url)
@@ -118,10 +117,11 @@ class Album(object):
         self.name = ""
         self.artist_id = 0
         self.release_date = 0000
+        self.genre = ""
 
         if (not type(id) == int):
             id = int(id)
-        query = "SELECT id,name,artist_id,release_date FROM album where id=%d " % id
+        query = "SELECT id,name,artist_id,release_date,genre FROM album where id=%d " % id
         result_set = Database.getResult(query, True)
         self.id = id
         if not result_set is None:
@@ -129,6 +129,7 @@ class Album(object):
             self.content = result_set[1]
             self.artist_id = result_set[2]
             self.release_date = result_set[3]
+            self.genre = result_set[4]
         return
 
     def save(self):
@@ -138,15 +139,14 @@ class Album(object):
             return self.insert()
 
     def insert(self):
-        print (self.release_date)
-        query = "insert into album (name,artist_id,release_date) values ('%s',%d,%d)" % (
-            Database.escape(self.name), self.artist_id, self.release_date)
+        query = "insert into album (name,artist_id,release_date,genre) values ('%s',%d,%d,'%s')" % (
+            Database.escape(self.name), self.artist_id, self.release_date,Database.escape(self.genre))
         self.id = Database.doQuery(query)
         return self.id
 
     def update(self):
-        query = "update album set name='%s',artist_id=%d,release_date=%d where id=%d" % (
-            Database.escape(self.name), self.artist_id, self.id, self.release_date)
+        query = "update album set name='%s',artist_id=%d,release_date=%d,genre = '%s' where id=%d" % (
+            Database.escape(self.name), self.artist_id, self.id, self.release_date,Database.escape(self.genre))
         # query = ("delete from page where id=%s" % id)
         return Database.doQuery(query)
 
@@ -155,6 +155,7 @@ class Track(object):
     def __init__(self, id=0):
         self.name = ""
         self.album_id = 0
+        self.duration = 0
 
         if (not type(id) == int):
             id = int(id)
@@ -188,23 +189,22 @@ class Track(object):
 
 
 artistName = sys.argv[1]
-# todo  add track duration to web query, check for instruments used,check to see if I can pull band members info
 albums = getAlbums(artistName)
-# print type(albums)
-# print albums.encode('utf8')
 artist = Artist()
 artist.name = artistName
 artist.save()
 for album in albums["album"]:
     # print type(album)
     # print album
+    print('************************************')
     print album["strAlbum"]
     print album["intYearReleased"]
-    print album["idAlbum"]
+    print('************************************')
     a = Album()
     a.name = album["strAlbum"]
     a.artist_id = artist.id
-    a.release_date = ["intYearReleased"]
+    a.release_date = int(album["intYearReleased"])
+    a.genre = album["strGenre"]
     a.save()
     idAlbum = album["idAlbum"]
     tracks = getTracks(idAlbum)
@@ -212,5 +212,6 @@ for album in albums["album"]:
         print track["strTrack"]
         t = Track()
         t.name = track["strTrack"]
+        t.duration=int(track["intDuration"])
         t.album_id = a.id
         t.save()
