@@ -14,7 +14,7 @@ dbName = dbconfig.dbName
 
 #API:
 # http://www.theaudiodb.com/forum/viewtopic.php?t=7
-
+# get albums from artist
 def getAlbums(artistName):
     url = "http://www.theaudiodb.com/api/v1/json/1/searchalbum.php?s=%s" % urllib.quote_plus(artistName)
     response = StringIO.StringIO()
@@ -31,7 +31,7 @@ def getAlbums(artistName):
     response.close()
     return albums
 
-
+# get tracks from album
 def getTracks(idAlbum):
     url = "http://www.theaudiodb.com/api/v1/json/1/track.php?m=%s" % idAlbum
     response = StringIO.StringIO()
@@ -46,7 +46,7 @@ def getTracks(idAlbum):
     tracks = json.loads(response.getvalue())
     return tracks
 
-
+# connect to database
 class Database(object):
     @staticmethod
     def getConnection():
@@ -80,7 +80,7 @@ class Database(object):
         conn.close()
         return lastId
 
-
+# save artist
 class Artist(object):
     def __init__(self, id=0):
         self.name = ""
@@ -111,7 +111,7 @@ class Artist(object):
         # query = ("delete from page where id=%s" % id)
         return Database.doQuery(query)
 
-
+# save albums from artist
 class Album(object):
     def __init__(self, id=0):
         self.name = ""
@@ -150,7 +150,7 @@ class Album(object):
         # query = ("delete from page where id=%s" % id)
         return Database.doQuery(query)
 
-
+# save tracks from albums
 class Track(object):
     def __init__(self, id=0):
         self.name = ""
@@ -194,8 +194,6 @@ artist = Artist()
 artist.name = artistName
 artist.save()
 for album in albums["album"]:
-    # print type(album)
-    # print album
     print('************************************')
     print album["strAlbum"]
     print album["intYearReleased"]
